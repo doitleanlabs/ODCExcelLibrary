@@ -1,3 +1,3 @@
-# OutSystems ODC External Code for Excel (ODCExcelLibrary)
+# OutSystems ODC External Code for Excel (ExcelLibraryCustom)
 
 Based on https://github.com/EPPlusSoftware/EPPlus

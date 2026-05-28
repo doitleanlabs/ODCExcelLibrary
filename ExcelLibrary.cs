@@ -1494,6 +1494,94 @@ public class ExcelLibrary : IExcelLibrary
         }
     }
 
+    public void Data_WriteJSON_URL(byte[] excelBinary, string GET_BINARY_URL, string UPDATE_BINARY_URL)
+    {
+        if (string.IsNullOrWhiteSpace(GET_BINARY_URL))
+        {
+            return;
+        }
+
+        DataWriteJSON[] dataWriteJSONs;
+
+        try
+        {
+            using var httpClient = new HttpClient();
+            string serializedDataWriteJSONs = httpClient.GetStringAsync(GET_BINARY_URL).GetAwaiter().GetResult();
+            dataWriteJSONs = JsonConvert.DeserializeObject<DataWriteJSON[]>(serializedDataWriteJSONs) ?? Array.Empty<DataWriteJSON>();
+        }
+        catch
+        {
+            return;
+        }
+
+        byte[] updatedBinary;
+        using (var package = Excel_Open(excelBinary))
+        {
+            ExcelRange? excelRanges;
+
+            foreach (DataWriteJSON dataWriteJSON in dataWriteJSONs)
+            {
+                var jsonItems = JsonConvert.DeserializeObject<IEnumerable<System.Dynamic.ExpandoObject>>(dataWriteJSON.JSONString);
+
+                try
+                {
+                    excelRanges = Cell_Selections(package, dataWriteJSON.Cell.CellRow, dataWriteJSON.Cell.CellColumn, 0, 0, dataWriteJSON.CellName ?? "", dataWriteJSON.SheetName);
+                }
+                catch
+                {
+                    return;
+                }
+
+                if (excelRanges == null)
+                {
+                    return;
+                }
+
+                ExcelRangeBase tableRange = excelRanges.LoadFromDictionaries(jsonItems, c =>
+                {
+                    if (dataWriteJSON.IsShowHeader)
+                    {
+                        c.PrintHeaders = true;
+                    }
+
+                    c.HeaderParsingType = HeaderParsingTypes.CamelCaseToSpace;
+
+                    if (dataWriteJSON.TableStyle != "" || dataWriteJSON.TableStyle != null)
+                    {
+                        TableStyles tableStyles;
+                        if (Enum.TryParse<TableStyles>(dataWriteJSON.TableStyle, out tableStyles))
+                        {
+                            c.TableStyle = tableStyles;
+                        }
+                    }
+                });
+
+                if (dataWriteJSON.IsAutoFitColumn)
+                {
+                    tableRange.AutoFitColumns();
+                }
+            }
+
+            updatedBinary = package.GetAsByteArray();
+        }
+
+        if (!string.IsNullOrWhiteSpace(UPDATE_BINARY_URL))
+        {
+            try
+            {
+                using var httpClient = new HttpClient();
+                using var content = new ByteArrayContent(updatedBinary);
+                content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+                HttpResponseMessage response = httpClient.PutAsync(UPDATE_BINARY_URL, content).GetAwaiter().GetResult();
+                response.EnsureSuccessStatusCode();
+            }
+            catch
+            {
+                return;
+            }
+        }
+    }
+
 
 
     public byte[] Image_Insert(byte[] excelBinary, byte[] imageFile, int imageSizePercent = 100, int imageWidth = 0, int imageHeight = 0, int cellRow = 0, int cellColumn = 0, string? cellName = null, string? sheetName = null ) {

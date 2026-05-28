@@ -866,25 +866,24 @@
     ]
   },
   "packageFolders": {
-    "/Users/andreasekoyoga/.nuget/packages/": {}
+    "/Users/rafaelfantato/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/andreasekoyoga/Documents/Net Code/ODCExcelLib/ODCExcelLibrary/ODCExcelLibrary.csproj",
-      "projectName": "ODCExcelLibrary",
-      "projectPath": "/Users/andreasekoyoga/Documents/Net Code/ODCExcelLib/ODCExcelLibrary/ODCExcelLibrary.csproj",
-      "packagesPath": "/Users/andreasekoyoga/.nuget/packages/",
-      "outputPath": "/Users/andreasekoyoga/Documents/Net Code/ODCExcelLib/ODCExcelLibrary/obj/",
+      "projectUniqueName": "/Users/rafaelfantato/Documents/GitHub/ODCExcelLibrary/ExcelLibraryCustom.csproj",
+      "projectName": "ExcelLibraryCustom",
+      "projectPath": "/Users/rafaelfantato/Documents/GitHub/ODCExcelLibrary/ExcelLibraryCustom.csproj",
+      "packagesPath": "/Users/rafaelfantato/.nuget/packages/",
+      "outputPath": "/Users/rafaelfantato/Documents/GitHub/ODCExcelLibrary/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/Users/andreasekoyoga/.nuget/NuGet/NuGet.Config"
+        "/Users/rafaelfantato/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
       ],
       "sources": {
-        "/usr/local/share/dotnet/library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -937,7 +936,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.401/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.413/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
