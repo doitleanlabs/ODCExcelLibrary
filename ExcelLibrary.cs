@@ -37,10 +37,22 @@ public class ExcelLibrary : IExcelLibrary
         return r.IsMatch(hexColor);
     }
 
-    public ExcelPackage Excel_Open(byte[] excelBinary)
+    private void SetLicense(string? licenseKey)
+    {
+        if (!string.IsNullOrWhiteSpace(licenseKey))
+        {
+            ExcelPackage.License.SetCommercial(licenseKey);
+        }
+        else
+        {
+            ExcelPackage.License.SetNonCommercialOrganization("OutSystems Community");
+        }
+    }
+
+    public ExcelPackage Excel_Open(byte[] excelBinary, string? licenseKey = null)
     {
         Stream stream = new MemoryStream(excelBinary);
-        ExcelPackage.License.SetNonCommercialOrganization("OutSystems Community");
+        SetLicense(licenseKey);
 
         ExcelTextFormat format = new ExcelTextFormat();
         format.Encoding = new System.Text.UTF8Encoding();
@@ -69,7 +81,7 @@ public class ExcelLibrary : IExcelLibrary
 
 
     private ExcelPackage CreateDummyExcel() {
-        ExcelPackage.License.SetNonCommercialOrganization("OutSystems Community");
+        SetLicense(null);
         ExcelPackage package = new ExcelPackage();
         var workSheet = package.Workbook.Worksheets.Add("Sheet1");
 
@@ -79,7 +91,6 @@ public class ExcelLibrary : IExcelLibrary
 
     private byte[] AddSheets(ExcelPackage package, Worksheet[] worksheets) {
         ExcelWorksheet excelWorksheet;
-        ExcelPackage.License.SetNonCommercialOrganization("OutSystems Community");
         using (package)
         {
             if(worksheets.Length > 0) {
@@ -305,9 +316,9 @@ public class ExcelLibrary : IExcelLibrary
 // Public Method Implementation Interface - WORKBOOK
 // ============================================================
 
-    public byte[] Workbook_Create(Worksheet[] worksheets)
+    public byte[] Workbook_Create(Worksheet[] worksheets, string? licenseKey = null)
     {
-        ExcelPackage.License.SetNonCommercialOrganization("OutSystems Community");
+        SetLicense(licenseKey);
         return AddSheets(new ExcelPackage(), worksheets);
     }
 
@@ -344,10 +355,10 @@ public class ExcelLibrary : IExcelLibrary
         return worksheetProperties;
     }
 
-    public WorksheetProperties[] Workbook_GetWorksheet(byte[] excelBinary)
+    public WorksheetProperties[] Workbook_GetWorksheet(byte[] excelBinary, string? licenseKey = null)
     {
         List<WorksheetProperties> worksheetProperties = new List<WorksheetProperties>();
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             int countWS = package.Workbook.Worksheets.Count;
             for (int i = 0; i < countWS; i++)
@@ -358,9 +369,9 @@ public class ExcelLibrary : IExcelLibrary
         }
     }
 
-    public byte[] Workbook_SetProperties(byte[] excelBinary, WorkbookProperties workbookProperties)
+    public byte[] Workbook_SetProperties(byte[] excelBinary, WorkbookProperties workbookProperties, string? licenseKey = null)
     {
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             package.Workbook.Properties.Title = workbookProperties.Title ?? "";        
             package.Workbook.Properties.Author = workbookProperties.Author ?? "";        
@@ -387,40 +398,38 @@ public class ExcelLibrary : IExcelLibrary
     // Public Method Implementation Interface - WORKSHEET
     // ============================================================
 
-    public WorksheetProperties Worksheet_GetProperties(byte[] excelBinary, string sheetName)
-    { 
-        using (var package = Excel_Open(excelBinary))
+    public WorksheetProperties Worksheet_GetProperties(byte[] excelBinary, string sheetName, string? licenseKey = null)
+    {
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelWorksheet worksheet = Worksheet_Select(package, sheetName);
             return GetWorksheetProperties(worksheet);
         }       
     }
 
-    public byte[] Worksheet_Add(byte[] excelBinary, string? sheetName = null)
+    public byte[] Worksheet_Add(byte[] excelBinary, string? sheetName = null, string? licenseKey = null)
     {
-        ExcelPackage.License.SetNonCommercialOrganization("OutSystems Community");
         if (sheetName == null)
         {
-            return AddSheets(Excel_Open(excelBinary), new Worksheet[0]);
+            return AddSheets(Excel_Open(excelBinary, licenseKey), new Worksheet[0]);
         }
         else
         {
             Worksheet[] worksheets = new Worksheet[1];
             worksheets[0].Name = sheetName;
-            return AddSheets(Excel_Open(excelBinary), worksheets);
+            return AddSheets(Excel_Open(excelBinary, licenseKey), worksheets);
         }
     }
 
-    public byte[] Worksheet_AddList(byte[] excelBinary, Worksheet[] worksheets)
+    public byte[] Worksheet_AddList(byte[] excelBinary, Worksheet[] worksheets, string? licenseKey = null)
     {
         if (worksheets.Length == 0) return excelBinary;
-        ExcelPackage.License.SetNonCommercialOrganization("OutSystems Community");
-        return AddSheets(Excel_Open(excelBinary), worksheets);
+        return AddSheets(Excel_Open(excelBinary, licenseKey), worksheets);
     }
 
-    public byte[] Worksheet_AutofitColumns(byte[] excelBinary, string? sheetName = null)
+    public byte[] Worksheet_AutofitColumns(byte[] excelBinary, string? sheetName = null, string? licenseKey = null)
     {
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelWorksheet worksheet = Worksheet_Select(package, sheetName);
             worksheet.Cells.AutoFitColumns();
@@ -428,9 +437,9 @@ public class ExcelLibrary : IExcelLibrary
         }
     }
 
-    public byte[] Worksheet_Calculate(byte[] excelBinary, string? sheetName = null)
+    public byte[] Worksheet_Calculate(byte[] excelBinary, string? sheetName = null, string? licenseKey = null)
     {
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelWorksheet worksheet = Worksheet_Select(package, sheetName);
             worksheet.Calculate();
@@ -441,9 +450,9 @@ public class ExcelLibrary : IExcelLibrary
     public byte[] Worksheet_Protect(byte[] excelBinary, string password, bool? isAllowAutoFilter = false, bool? isAllowDeleteColumns = false, bool? isAllowDeleteRows = false, 
         bool? isAllowEditObject = false, bool? isAllowFormatCells = false, bool? isAllowFormatColumns = false, bool? isAllowFormatRows = false, bool? isAllowInsertColumns = false, 
         bool? isAllowInsertHyperlinks = false, bool? isAllowInsertRows = false, bool? isAllowPivotTables = false, bool? isAllowSelectLockedCells = false, bool? isAllowSelectUnLockedCells = false, 
-        bool? isAllowSort = false, bool? isProtected = false, string? sheetName = null)
+        bool? isAllowSort = false, bool? isProtected = false, string? sheetName = null, string? licenseKey = null)
     {
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelWorksheet worksheet = Worksheet_Select(package, sheetName);
 
@@ -475,9 +484,9 @@ public class ExcelLibrary : IExcelLibrary
         }        
     }
 
-    public byte[] Worksheet_AddAutoFilter(byte[] excelBinary, int startCellRow = 0, int startCellColumn = 0, int endCellRow = 0, int endCellColumn = 0, string? cellName = null, string? sheetName = null)
+    public byte[] Worksheet_AddAutoFilter(byte[] excelBinary, int startCellRow = 0, int startCellColumn = 0, int endCellRow = 0, int endCellColumn = 0, string? cellName = null, string? sheetName = null, string? licenseKey = null)
     {
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelRange? excelRanges;
 
@@ -496,9 +505,9 @@ public class ExcelLibrary : IExcelLibrary
         }
     }
 
-    public byte[] Worksheet_Delete(byte[] excelBinary, int sheetIndex = 0, string? sheetName = null)
+    public byte[] Worksheet_Delete(byte[] excelBinary, int sheetIndex = 0, string? sheetName = null, string? licenseKey = null)
     {
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             if(sheetName == null || sheetName == "") {
                 package.Workbook.Worksheets.Delete(sheetIndex);
@@ -510,9 +519,9 @@ public class ExcelLibrary : IExcelLibrary
         }
     }
 
-    public byte[] Worksheet_Rename(byte[] excelBinary, string newSheetName, int sheetIndex = 0, string? sheetName = null)
+    public byte[] Worksheet_Rename(byte[] excelBinary, string newSheetName, int sheetIndex = 0, string? sheetName = null, string? licenseKey = null)
     {
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelWorksheet worksheet;
             if(sheetName == null || sheetName == "") {
@@ -526,9 +535,9 @@ public class ExcelLibrary : IExcelLibrary
         }   
     }
 
-    public byte[] Worksheet_Hide_Show(byte[] excelBinary, int sheetIndex = 0, string? sheetName = null, bool isShow = false)
+    public byte[] Worksheet_Hide_Show(byte[] excelBinary, int sheetIndex = 0, string? sheetName = null, bool isShow = false, string? licenseKey = null)
     {
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelWorksheet worksheet;
             if(sheetName == null || sheetName == "") {
@@ -578,9 +587,9 @@ public class ExcelLibrary : IExcelLibrary
         return newSheetName;
     }
 
-    public byte[] Worksheet_Copy(byte[] ExcelSource, string SourceSheetName, byte[] ExcelDestination)
+    public byte[] Worksheet_Copy(byte[] ExcelSource, string SourceSheetName, byte[] ExcelDestination, string? licenseKey = null)
     {
-        using (var destPackage = Excel_Open(ExcelDestination))
+        using (var destPackage = Excel_Open(ExcelDestination, licenseKey))
         {
             List<string> destSheetNames = GetSheetName(ExcelDestination);
 
@@ -590,7 +599,7 @@ public class ExcelLibrary : IExcelLibrary
                 sourceSheetNames.Add(x.Trim());
             }
 
-            using (var sourcePackage = Excel_Open(ExcelSource))
+            using (var sourcePackage = Excel_Open(ExcelSource, licenseKey))
             {
                 for (int sheetIndex = 0; sheetIndex < sourcePackage.Workbook.Worksheets.Count; sheetIndex++)
                 {
@@ -617,9 +626,9 @@ public class ExcelLibrary : IExcelLibrary
     // Public Method Implementation Interface - CELL
     // ============================================================
 
-    public string Cell_Read(byte[] excelBinary, int cellRow = 0, int cellColumn = 0, string? cellName = null, string? sheetName = null)
+    public string Cell_Read(byte[] excelBinary, int cellRow = 0, int cellColumn = 0, string? cellName = null, string? sheetName = null, string? licenseKey = null)
     {
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelRange? excelRanges;
             try
@@ -643,9 +652,9 @@ public class ExcelLibrary : IExcelLibrary
         }
     }
 
-    public byte[] Cell_Merge(byte[] excelBinary, CellMerge[] cellMerges)
+    public byte[] Cell_Merge(byte[] excelBinary, CellMerge[] cellMerges, string? licenseKey = null)
     {
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             foreach(CellMerge cellMerge in cellMerges) {
                 ExcelRange? excelRanges;
@@ -667,9 +676,9 @@ public class ExcelLibrary : IExcelLibrary
         }
     }
 
-    public byte[] Cell_UnMerge(byte[] excelBinary, CellMerge[] cellUnMerges)
+    public byte[] Cell_UnMerge(byte[] excelBinary, CellMerge[] cellUnMerges, string? licenseKey = null)
     {
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             foreach(CellMerge cellUnMerge in cellUnMerges) {
                 ExcelRange? excelRanges;
@@ -691,9 +700,9 @@ public class ExcelLibrary : IExcelLibrary
         }
     }
 
-    public byte[] Cell_Write(byte[] excelBinary, CellWrite[] cellWrites, CellCopy? cellCopy = null)
+    public byte[] Cell_Write(byte[] excelBinary, CellWrite[] cellWrites, CellCopy? cellCopy = null, string? licenseKey = null)
     {
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             foreach(CellWrite cellWrite in cellWrites) {
                 ExcelWorksheet worksheet = Worksheet_Select(package, cellWrite.SheetName);
@@ -750,16 +759,16 @@ public class ExcelLibrary : IExcelLibrary
             // Console.WriteLine("IsEmpty: " + cellCopy.GetValueOrDefault().IsEmpty());
 
             if(!cellCopy.GetValueOrDefault().IsEmpty()) {
-                return Cell_Copy(package.GetAsByteArray(), cellCopy.GetValueOrDefault());
+                return Cell_Copy(package.GetAsByteArray(), cellCopy.GetValueOrDefault(), licenseKey);
             }
 
             return package.GetAsByteArray();
         }        
     }
 
-    public byte[] Cell_Copy(byte[] excelBinary, CellCopy cellCopy)
+    public byte[] Cell_Copy(byte[] excelBinary, CellCopy cellCopy, string? licenseKey = null)
     {
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
 
             ExcelWorksheet worksheet = Worksheet_Select(package, cellCopy.SheetName);
@@ -799,9 +808,9 @@ public class ExcelLibrary : IExcelLibrary
         }
     }
 
-    public CellFindResult[] Cell_FindByValue(byte[] excelBinary, string cellValue, bool isContain = false, string? cellRange = null, string? sheetName = null)
+    public CellFindResult[] Cell_FindByValue(byte[] excelBinary, string cellValue, bool isContain = false, string? cellRange = null, string? sheetName = null, string? licenseKey = null)
     {
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             List<CellFindResult> cellsList = new List<CellFindResult>();
             ExcelWorksheet worksheet = Worksheet_Select(package, sheetName);
@@ -842,8 +851,8 @@ public class ExcelLibrary : IExcelLibrary
         }     
     }
 
-    public byte[] Cell_Write_RichText(byte[] excelBinary, CellWriteRichText[] cellWriteRichTexts) {
-        using (var package = Excel_Open(excelBinary))
+    public byte[] Cell_Write_RichText(byte[] excelBinary, CellWriteRichText[] cellWriteRichTexts, string? licenseKey = null) {
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             foreach(CellWriteRichText cellWriteRichText in cellWriteRichTexts) {
                 ExcelWorksheet worksheet = Worksheet_Select(package, cellWriteRichText.SheetName);
@@ -895,10 +904,10 @@ public class ExcelLibrary : IExcelLibrary
 // Public Method Implementation Interface - COLUMN
 // ============================================================
 
-    public byte[] Column_Delete(byte[] excelBinary, int colIndex, string? sheetName = null)
+    public byte[] Column_Delete(byte[] excelBinary, int colIndex, string? sheetName = null, string? licenseKey = null)
     {
-        if(colIndex < 1) return excelBinary;        
-        using (var package = Excel_Open(excelBinary))
+        if(colIndex < 1) return excelBinary;
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelWorksheet worksheet = Worksheet_Select(package, sheetName);
             worksheet.DeleteColumn(colIndex);
@@ -906,10 +915,10 @@ public class ExcelLibrary : IExcelLibrary
         }
     }
 
-    public byte[] Column_Hide_Show(byte[] excelBinary, int colIndex, bool isShow = false, string? sheetName = null)
+    public byte[] Column_Hide_Show(byte[] excelBinary, int colIndex, bool isShow = false, string? sheetName = null, string? licenseKey = null)
     {
-        if(colIndex < 1) return excelBinary;        
-        using (var package = Excel_Open(excelBinary))
+        if(colIndex < 1) return excelBinary;
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelWorksheet worksheet = Worksheet_Select(package, sheetName);
             worksheet.Columns[colIndex].Hidden = isShow;
@@ -917,10 +926,10 @@ public class ExcelLibrary : IExcelLibrary
         }
     }
 
-    public byte[] Column_Insert(byte[] excelBinary, int colIndex, int colNewAdd = 1, int colWidth = 64, bool isCopyFormatFromSource = false, string? sheetName = null)
+    public byte[] Column_Insert(byte[] excelBinary, int colIndex, int colNewAdd = 1, int colWidth = 64, bool isCopyFormatFromSource = false, string? sheetName = null, string? licenseKey = null)
     {
-        if(colIndex < 1) return excelBinary;        
-        using (var package = Excel_Open(excelBinary))
+        if(colIndex < 1) return excelBinary;
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelWorksheet worksheet = Worksheet_Select(package, sheetName);
 
@@ -941,10 +950,10 @@ public class ExcelLibrary : IExcelLibrary
         }
     }
 
-    public byte[] Column_Width(byte[] excelBinary, int colIndex, int colWidth = 64, string? sheetName = null)
+    public byte[] Column_Width(byte[] excelBinary, int colIndex, int colWidth = 64, string? sheetName = null, string? licenseKey = null)
     {
-        if(colIndex < 1) return excelBinary;        
-        using (var package = Excel_Open(excelBinary))
+        if(colIndex < 1) return excelBinary;
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelWorksheet worksheet = Worksheet_Select(package, sheetName);
             worksheet.Columns[colIndex].Width = colWidth;
@@ -956,10 +965,10 @@ public class ExcelLibrary : IExcelLibrary
 // Public Method Implementation Interface - ROW
 // ============================================================
 
-    public byte[] Row_Delete(byte[] excelBinary, int rowIndex, string? sheetName = null)
+    public byte[] Row_Delete(byte[] excelBinary, int rowIndex, string? sheetName = null, string? licenseKey = null)
     {
-        if(rowIndex < 1) return excelBinary;        
-        using (var package = Excel_Open(excelBinary))
+        if(rowIndex < 1) return excelBinary;
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelWorksheet worksheet = Worksheet_Select(package, sheetName);
             worksheet.DeleteRow(rowIndex);
@@ -967,10 +976,10 @@ public class ExcelLibrary : IExcelLibrary
         }
     }
 
-    public byte[] Row_Hide_Show(byte[] excelBinary, int rowIndex, bool isShow = false, string? sheetName = null)
+    public byte[] Row_Hide_Show(byte[] excelBinary, int rowIndex, bool isShow = false, string? sheetName = null, string? licenseKey = null)
     {
-        if(rowIndex < 1) return excelBinary;        
-        using (var package = Excel_Open(excelBinary))
+        if(rowIndex < 1) return excelBinary;
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelWorksheet worksheet = Worksheet_Select(package, sheetName);
             worksheet.Rows[rowIndex].Hidden = isShow;
@@ -978,10 +987,10 @@ public class ExcelLibrary : IExcelLibrary
         }
     }
 
-    public byte[] Row_Insert(byte[] excelBinary, int rowIndex, int rowNewAdd = 1, int rowHeight = 20, bool isCopyFormatFromSource = false, string? sheetName = null)
+    public byte[] Row_Insert(byte[] excelBinary, int rowIndex, int rowNewAdd = 1, int rowHeight = 20, bool isCopyFormatFromSource = false, string? sheetName = null, string? licenseKey = null)
     {
-        if(rowIndex < 1) return excelBinary;        
-        using (var package = Excel_Open(excelBinary))
+        if(rowIndex < 1) return excelBinary;
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelWorksheet worksheet = Worksheet_Select(package, sheetName);
 
@@ -1001,10 +1010,10 @@ public class ExcelLibrary : IExcelLibrary
         }
     }
 
-    public byte[] Row_Height(byte[] excelBinary, int rowIndex, int rowHeight = 20, string? sheetName = null)
+    public byte[] Row_Height(byte[] excelBinary, int rowIndex, int rowHeight = 20, string? sheetName = null, string? licenseKey = null)
     {
         if(rowIndex < 1) return excelBinary;
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelWorksheet worksheet = Worksheet_Select(package, sheetName);
             worksheet.Rows[rowIndex].Height = rowHeight;
@@ -1014,10 +1023,10 @@ public class ExcelLibrary : IExcelLibrary
 
     }
 
-    public byte[] Row_AutoHeight(byte[] excelBinary, int rowStart, int rowEnd, string? sheetName = null)
-    { 
+    public byte[] Row_AutoHeight(byte[] excelBinary, int rowStart, int rowEnd, string? sheetName = null, string? licenseKey = null)
+    {
         if(rowEnd < rowStart) return excelBinary;
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelWorksheet worksheet = Worksheet_Select(package, sheetName);
             for (int i = rowStart; i <= rowEnd; i++)
@@ -1064,8 +1073,8 @@ public class ExcelLibrary : IExcelLibrary
         return validation;
     }
 
-    public byte[] Data_Validation_Integer(byte[] excelBinary, CellDataValidation cellDataValidation, DataValidation dataValidation) {
-        using (var package = Excel_Open(excelBinary))
+    public byte[] Data_Validation_Integer(byte[] excelBinary, CellDataValidation cellDataValidation, DataValidation dataValidation, string? licenseKey = null) {
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             // Console.WriteLine(dataValidation.dataValidationConfig.ValidationOperator.ToLower());
 
@@ -1142,8 +1151,8 @@ public class ExcelLibrary : IExcelLibrary
         }
     }
 
-    public byte[] Data_Validation_Decimal(byte[] excelBinary, CellDataValidation cellDataValidation, DataValidation dataValidation) {
-        using (var package = Excel_Open(excelBinary))
+    public byte[] Data_Validation_Decimal(byte[] excelBinary, CellDataValidation cellDataValidation, DataValidation dataValidation, string? licenseKey = null) {
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             // Console.WriteLine(dataValidation.dataValidationConfig.ValidationOperator.ToLower());
 
@@ -1304,9 +1313,9 @@ public class ExcelLibrary : IExcelLibrary
 
 
 
-    public byte[] Data_Validation_List(byte[] excelBinary, CellDataValidation cellDataValidation, DataValidationListItem dataValidationListItem) {
+    public byte[] Data_Validation_List(byte[] excelBinary, CellDataValidation cellDataValidation, DataValidationListItem dataValidationListItem, string? licenseKey = null) {
 
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelWorksheet worksheet = Worksheet_Select(package, cellDataValidation.SheetName);
 
@@ -1349,9 +1358,9 @@ public class ExcelLibrary : IExcelLibrary
 // Public Method Implementation Interface - Range Functions
 // ============================================================
 
-    public byte[] Range_Format(byte[] excelBinary, RangeFormat[] rangeFormats)
+    public byte[] Range_Format(byte[] excelBinary, RangeFormat[] rangeFormats, string? licenseKey = null)
     {
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelRange? excelRanges;
             foreach(RangeFormat rangeFormat in rangeFormats) {
@@ -1371,9 +1380,9 @@ public class ExcelLibrary : IExcelLibrary
         }
     }
 
-    public byte[] Range_BorderFormat(byte[] excelBinary, RangeBorderFormat[] rangeBorderFormats)
+    public byte[] Range_BorderFormat(byte[] excelBinary, RangeBorderFormat[] rangeBorderFormats, string? licenseKey = null)
     {
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelRange? excelRanges;
 
@@ -1395,11 +1404,11 @@ public class ExcelLibrary : IExcelLibrary
         }
     }
 
-    public RangeCellValue[] Range_CellRead(byte[] excelBinary, RangeCellRead[] rangeCellReads)
+    public RangeCellValue[] Range_CellRead(byte[] excelBinary, RangeCellRead[] rangeCellReads, string? licenseKey = null)
     {
         List<RangeCellValue> rangeCellValues = new List<RangeCellValue>();
-         
-        using (var package = Excel_Open(excelBinary))
+
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelRange? excelRanges;
             foreach(RangeCellRead rangeCellRead in rangeCellReads) {
@@ -1450,8 +1459,8 @@ public class ExcelLibrary : IExcelLibrary
 // Public Method Implementation Interface - Miscellaneous
 // ============================================================
 
-    public byte[] Data_WriteJSON(byte[] excelBinary, DataWriteJSON[] dataWriteJSONs) {
-        using (var package = Excel_Open(excelBinary)) {
+    public byte[] Data_WriteJSON(byte[] excelBinary, DataWriteJSON[] dataWriteJSONs, string? licenseKey = null) {
+        using (var package = Excel_Open(excelBinary, licenseKey)) {
             ExcelRange? excelRanges;
 
             foreach(DataWriteJSON dataWriteJSON in dataWriteJSONs) {
@@ -1494,7 +1503,7 @@ public class ExcelLibrary : IExcelLibrary
         }
     }
 
-    public void Data_WriteJSON_URL(byte[] excelBinary, string GET_BINARY_URL, string UPDATE_BINARY_URL)
+    public void Data_WriteJSON_URL(byte[] excelBinary, string GET_BINARY_URL, string UPDATE_BINARY_URL, string? licenseKey = null)
     {
         if (string.IsNullOrWhiteSpace(GET_BINARY_URL))
         {
@@ -1515,7 +1524,7 @@ public class ExcelLibrary : IExcelLibrary
         }
 
         byte[] updatedBinary;
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelRange? excelRanges;
 
@@ -1584,9 +1593,9 @@ public class ExcelLibrary : IExcelLibrary
 
 
 
-    public byte[] Image_Insert(byte[] excelBinary, byte[] imageFile, int imageSizePercent = 100, int imageWidth = 0, int imageHeight = 0, int cellRow = 0, int cellColumn = 0, string? cellName = null, string? sheetName = null ) {
-        if(imageFile.Length <= 0) return excelBinary;        
-        using (var package = Excel_Open(excelBinary))
+    public byte[] Image_Insert(byte[] excelBinary, byte[] imageFile, int imageSizePercent = 100, int imageWidth = 0, int imageHeight = 0, int cellRow = 0, int cellColumn = 0, string? cellName = null, string? sheetName = null, string? licenseKey = null) {
+        if(imageFile.Length <= 0) return excelBinary;
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelWorksheet worksheet = Worksheet_Select(package, sheetName);
 
@@ -1625,15 +1634,15 @@ public class ExcelLibrary : IExcelLibrary
         throw new NotImplementedException();
     }
 
-    public byte[] Excel_Merge(ExcelMerge[] ExcelFiles)
+    public byte[] Excel_Merge(ExcelMerge[] ExcelFiles, string? licenseKey = null)
     {
         List<string> sheetNames = new List<string>();
-        ExcelPackage.License.SetNonCommercialOrganization("OutSystems Community");
+        SetLicense(licenseKey);
         using (ExcelPackage resultExcel = new ExcelPackage())
         {
             foreach (ExcelMerge excelFile in ExcelFiles)
             {
-                using (var package = Excel_Open(excelFile.ExcelBinary))
+                using (var package = Excel_Open(excelFile.ExcelBinary, licenseKey))
                 {
                     for (int sheetIndex = 0; sheetIndex < package.Workbook.Worksheets.Count; sheetIndex++)
                     {
@@ -1719,10 +1728,10 @@ public class ExcelLibrary : IExcelLibrary
         return imageList;
     }
 
-    public ExcelImages[] Image_GetAll_OverCell(byte[] excelBinary, string? sheetName = null)
+    public ExcelImages[] Image_GetAll_OverCell(byte[] excelBinary, string? sheetName = null, string? licenseKey = null)
     {
         List<ExcelImages> imageList = new List<ExcelImages>();
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             if (sheetName == null || sheetName == "")
             {
@@ -1742,10 +1751,10 @@ public class ExcelLibrary : IExcelLibrary
     }
 
 
-    public ExcelImages[] Image_GetAll_InCell(byte[] excelBinary, string? sheetName = null)
+    public ExcelImages[] Image_GetAll_InCell(byte[] excelBinary, string? sheetName = null, string? licenseKey = null)
     {
         List<ExcelImages> imageList = new List<ExcelImages>();
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             if (sheetName == null || sheetName == "")
             {
@@ -1765,10 +1774,10 @@ public class ExcelLibrary : IExcelLibrary
     }
 
     // TODO
-    public ExcelImages Image_Get(byte[] excelBinary, int cellRow = 0, int cellColumn = 0, string? cellName = null, string? sheetName = null)
+    public ExcelImages Image_Get(byte[] excelBinary, int cellRow = 0, int cellColumn = 0, string? cellName = null, string? sheetName = null, string? licenseKey = null)
     {
-        
-        using (var package = Excel_Open(excelBinary))
+
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
 
             ExcelWorksheet worksheet = Worksheet_Select(package, sheetName);
@@ -1826,9 +1835,9 @@ public class ExcelLibrary : IExcelLibrary
     // Public Method Implementation Interface - Comment
     // ============================================================
 
-    public byte[] Comment_Add(byte[] excelBinary, CommentAdd[] commentAdds)
+    public byte[] Comment_Add(byte[] excelBinary, CommentAdd[] commentAdds, string? licenseKey = null)
     {
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelRange? excelRanges;
 
@@ -1857,9 +1866,9 @@ public class ExcelLibrary : IExcelLibrary
         }
     }
 
-    public byte[] Comment_Delete(byte[] excelBinary, CommentDelete[] commentDeletes)
+    public byte[] Comment_Delete(byte[] excelBinary, CommentDelete[] commentDeletes, string? licenseKey = null)
     {
-        using (var package = Excel_Open(excelBinary))
+        using (var package = Excel_Open(excelBinary, licenseKey))
         {
             ExcelRange? excelRanges;
 
